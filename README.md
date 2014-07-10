@@ -1,5 +1,5 @@
 # overmind.js
-Easy module isolation and lazy loading for Angular apps. Replace ng-view. 
+Easy module isolation and lazy loading for Angular apps. Replaces ng-view. 
 When the user navigates to a route, the overmind checks to see which app that route belongs to.
 The overmind then loads the app's scripts and templates (if not already loaded) and then bootstraps the app on the fly.
 
