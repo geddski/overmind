@@ -1,3 +1,9 @@
+/**
+ * Overmind
+ * Copyright 2014 Dave Geddes @geddski
+ * Version 0.0.1
+ */
+
 angular.module('overmind', ['ngRoute'])
   .config(function($routeProvider, $locationProvider){
     $routeProvider.otherwise({});
