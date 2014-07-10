@@ -1,0 +1,36 @@
+body{
+  margin: 0;
+  padding: 0;
+  background: WhiteSmoke;
+}
+
+body *{
+  box-sizing: border-box;
+}
+
+#nav{
+  background: GreenYellow;
+  height: 50px;
+  line-height: 40px;
+  padding: 5px;
+}
+
+#nav a{
+  margin-left: 10px;
+}
+
+.feature{
+  padding: 10px;
+}
+
+.profile{
+  background: LightSalmon;
+}
+
+.admin{
+  background: LightSkyBlue;
+}
+
+.home{
+  background: LightSteelBlue;
+}
