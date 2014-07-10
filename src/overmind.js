@@ -3,8 +3,9 @@ angular.module('overmind', ['ngRoute'])
     $routeProvider.otherwise({});
 
     // share the routeProvider with all the other apps
-    window.overmind = {};
-    window.overmind.$routeProvider = $routeProvider;
+    angular.module('overmind').shared = {
+      $routeProvider: $routeProvider
+    };
   })
   .run(function($rootScope, $location, $route, $templateCache, $routeParams, $browser, $rootElement){
     decorate($location, 'url');
@@ -25,13 +26,14 @@ angular.module('overmind', ['ngRoute'])
     }
 
     // make routing components available to other apps
-    window.overmind.$location = $location;
-    window.overmind.$route = $route;
-    window.overmind.$routeParams = $routeParams;
-    window.overmind.$templateCache = $templateCache;
-    window.overmind.$routeParams = $routeParams;
-    window.overmind.$browser = $browser;
-    window.overmind.overmindScope = $rootScope;
+    var shared = angular.module('overmind').shared;
+    shared.$location = $location;
+    shared.$route = $route;
+    shared.$routeParams = $routeParams;
+    shared.$templateCache = $templateCache;
+    shared.$routeParams = $routeParams;
+    shared.$browser = $browser;
+    shared.overmindScope = $rootScope;
 
     // listen for clicks on the root like $location does, but do it for the body so it will apply to all apps
     angular.element(document.body).on('click', function(event) {
@@ -66,13 +68,14 @@ angular.module('overmind', ['ngRoute'])
 // Configures other applications to use routeProvider etc from overmind 
 angular.module('overmind').control = function(){
   return function($provide){
-    $provide.constant('$routeProvider', window.overmind.$routeProvider);
-    $provide.constant('$location', window.overmind.$location);
-    $provide.constant('$route', window.overmind.$route);
-    $provide.constant('$templateCache', window.overmind.$templateCache);
-    $provide.constant('$routeParams', window.overmind.$routeParams);
-    $provide.constant('$browser', window.overmind.$browser);
-    $provide.constant('overmindScope', window.overmind.overmindScope);
+    var shared = angular.module('overmind').shared;
+    $provide.constant('$routeProvider', shared.$routeProvider);
+    $provide.constant('$location', shared.$location);
+    $provide.constant('$route', shared.$route);
+    $provide.constant('$templateCache', shared.$templateCache);
+    $provide.constant('$routeParams', shared.$routeParams);
+    $provide.constant('$browser', shared.$browser);
+    $provide.constant('overmindScope', shared.overmindScope);
   }
 };
 
