@@ -4,5 +4,5 @@ angular.module('home', [])
     $routeProvider.when('/', {controller: 'HomeCtrl', templateUrl: '/client/apps/home/home.html'})
   })
   .controller('HomeCtrl', function($scope){
-    console.log("$scope", $scope);
+    console.log("home ctrl");
   })

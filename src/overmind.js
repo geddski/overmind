@@ -1,242 +1,193 @@
 /**
  * Overmind
  * Copyright 2014 Dave Geddes @geddski
- * Version 0.0.1
+ * Version 0.2.0
  */
 
-angular.module('overmind', ['ngRoute'])
-  .config(function($routeProvider, $locationProvider){
-    $routeProvider.otherwise({});
+var overmind = angular.module('overmind', ['ngRoute']);
+overmind.shared = {};
 
-    // share the routeProvider with all the other apps
-    angular.module('overmind').shared = {
-      $routeProvider: $routeProvider
-    };
-  })
-  .run(function($rootScope, $location, $route, $templateCache, $routeParams, $browser, $rootElement){
-    decorate($location, 'url');
-    decorate($location, 'replace');
-    decorate($location, 'path');
-    decorate($location, 'search');
-    decorate($location, 'hash');
+overmind.config(function($routeProvider, $locationProvider){
+  $routeProvider.otherwise({});
 
-    // patch a service to update overmind's scope when called
-    function decorate(service, method){
-      var original = service[method];
-      service[method] = function(){
+  // share the routeProvider with all the other apps
+  overmind.shared.$routeProvider = $routeProvider;
+})
+.run(function($rootScope, $location, $route, $templateCache, $routeParams, $browser, $rootElement, $q){
+  decorate($location, 'url');
+  decorate($location, 'replace');
+  decorate($location, 'path');
+  decorate($location, 'search');
+  decorate($location, 'hash');
+
+  // patch a service to update overmind's scope when called
+  function decorate(service, method){
+    var original = service[method];
+    service[method] = function(){
+      // apply scope for setters
+      if (arguments.length > 0){
         setTimeout(function(){
           $rootScope.$apply();    
         });
-        return original.apply(service, arguments);
       }
+      return original.apply(service, arguments);
+    }
+  }
+
+  // make routing components available to other apps
+  var shared = overmind.shared;
+  shared.$location = $location;
+  shared.$route = $route;
+  shared.$routeParams = $routeParams;
+  shared.$templateCache = $templateCache;
+  shared.$routeParams = $routeParams;
+  shared.$browser = $browser;
+  shared.overmindScope = $rootScope;
+
+  // listen for clicks on the root like $location does, but do it for the body so it will apply to all apps
+  angular.element(document.body).on('click', function(event) {
+    if (event.ctrlKey || event.metaKey || event.which == 2) return;
+
+    var elm = angular.element(event.target);
+
+    // traverse the DOM up to find first A tag
+    while ((elm[0].nodeName).toLowerCase() !== 'a') {
+      // ignore rewriting if no A tag (reached root element, or no parent - removed from document)
+      if (elm[0] === $rootElement[0] || !(elm = elm.parent())[0]) return;
     }
 
-    // make routing components available to other apps
-    var shared = angular.module('overmind').shared;
-    shared.$location = $location;
-    shared.$route = $route;
-    shared.$routeParams = $routeParams;
-    shared.$templateCache = $templateCache;
-    shared.$routeParams = $routeParams;
-    shared.$browser = $browser;
-    shared.overmindScope = $rootScope;
+    var absHref = elm.prop('href');
 
-    // listen for clicks on the root like $location does, but do it for the body so it will apply to all apps
-    angular.element(document.body).on('click', function(event) {
-      if (event.ctrlKey || event.metaKey || event.which == 2) return;
+    var rewrittenUrl = $location.$$rewrite(absHref);
 
-      var elm = angular.element(event.target);
-
-      // traverse the DOM up to find first A tag
-      while ((elm[0].nodeName).toLowerCase() !== 'a') {
-        // ignore rewriting if no A tag (reached root element, or no parent - removed from document)
-        if (elm[0] === $rootElement[0] || !(elm = elm.parent())[0]) return;
+    if (absHref && !elm.attr('target') && rewrittenUrl && !event.isDefaultPrevented()) {
+      event.preventDefault();
+      if (rewrittenUrl != $browser.url()) {
+        // update location manually
+        $location.$$parse(rewrittenUrl);
+        $rootScope.$apply();
+        // hack to work around FF6 bug 684208 when scenario runner clicks on links
+        window.angular['ff-684208-preventDefault'] = true;
       }
-
-      var absHref = elm.prop('href');
-
-      var rewrittenUrl = $location.$$rewrite(absHref);
-
-      if (absHref && !elm.attr('target') && rewrittenUrl && !event.isDefaultPrevented()) {
-        event.preventDefault();
-        if (rewrittenUrl != $browser.url()) {
-          // update location manually
-          $location.$$parse(rewrittenUrl);
-          $rootScope.$apply();
-          // hack to work around FF6 bug 684208 when scenario runner clicks on links
-          window.angular['ff-684208-preventDefault'] = true;
-        }
-      }
-    });
+    }
   });
+});
+
+// allow shared resources.
+// these will be provided to apps controlled by the overmind
+angular.module('overmind').share = function(shared){
+  angular.forEach(shared, function(val, key){
+    overmind.shared[key] = val;
+  });
+};
 
 // Surrender your will to the overmind.
 // Configures other applications to use routeProvider etc from overmind 
 angular.module('overmind').control = function(){
-  return function($provide){
-    var shared = angular.module('overmind').shared;
-    $provide.constant('$routeProvider', shared.$routeProvider);
-    $provide.constant('$location', shared.$location);
-    $provide.constant('$route', shared.$route);
-    $provide.constant('$templateCache', shared.$templateCache);
-    $provide.constant('$routeParams', shared.$routeParams);
-    $provide.constant('$browser', shared.$browser);
-    $provide.constant('overmindScope', shared.overmindScope);
+
+  return /*@ngInject*/ function($provide){
+    var shared = overmind.shared;
+    if (!shared) return;
+    angular.forEach(overmind.shared, function(val, key){
+      $provide.constant(key, val);
+    });
   }
 };
 
 
-/**
- * overmind directive
- * this is the overmind's version of ngView
- */ 
-angular.module('overmind').directive('overmind', overmindFactory);
-angular.module('overmind').directive('overmind', overmindFillContentFactory);
-
-
-/**
- * @ngdoc event
- * @name overmind#$viewContentLoaded
- * @eventType emit on the current app scope
- * @description
- * Emitted every time the overmind content is reloaded.
- */
-overmindFactory.$inject = ['$route', '$anchorScroll', '$animate', '$location'];
-function overmindFactory(   $route,   $anchorScroll,   $animate,  $location) {
+// overmind directive, replaces ng-view
+angular.module('overmind').directive('overmind', function($location, $route){
   return {
-    restrict: 'ECA',
-    terminal: true,
-    priority: 400,
-    transclude: 'element',
-    link: function(scope, $element, attr, ctrl, $transclude) {
-        var currentScope,
-            currentElement,
-            previousElement,
-            autoScrollExp = attr.autoscroll,
-            onloadExp = attr.onload || '',
-            currentApp;
+    restrict: 'E',
+    link: function(scope){
+      var currentlyBootstrapped;
 
-        scope.$on('$routeChangeSuccess', function(){
-          // determine the app (if any) to bootstrap or use default
-          var overmind = angular.module('overmind');
-          var match = $location.path().match(/\/\w+/) || [];
-          var app = overmind.apps[match[0]] || overmind.default;
+      scope.$on('$routeChangeSuccess', function(){
+        // determine the app (if any) to bootstrap or use default
+        var overmind = angular.module('overmind');
+        var match = $location.path().match(/\/\w+/) || [];
+        var app = overmind.apps[match[0]] || overmind.default;
 
-          // if the app is registered and is different from the current app, bootstrap it
-          if (app && app !== currentApp){
-            bootstrap(app);
-          }
-          else{
-            update();
-          }
+        // if the app is registered and is different from the current app, bootstrap it
+        if (app && app !== currentlyBootstrapped){
+          cleanupApp();
+          bootstrap(app);
+        }
+        else{
+          cleanupView();
+          setView();
+        }
+      });
+
+      function bootstrap(app){
+        require([app.file], function(){
+          var newApp = getCurrentApp();
+          angular.bootstrap(newApp, [app.ngModule]);
+          currentlyBootstrapped = app;
+          // check for new matching routes
+          $route.reload();
         });
-
-        function cleanupLastView() {
-          if(currentElement) {
-            previousElement = currentElement;
-            currentElement = null;
-          }
-          if(currentScope) {
-            currentScope.$destroy();
-            currentScope = null;
-          }
-          if(previousElement) {
-            previousElement.replaceWith('<div id="current-view"></div>');
-            previousElement = null;
-          }
-        }
-
-        function bootstrap(app){
-          require([app.file], function(res){
-              var previousScope = angular.element(document.getElementById('current-app')).scope();
-              if (previousScope){
-                previousScope.$destroy();
-              }
-              angular.element(document.getElementById('current-app')).replaceWith('<div id="current-app"><div id="current-view"></div></div>');
-              angular.bootstrap(document.getElementById('current-app'), [app.ngModule]);
-              currentApp = app;
-              // check again for matching routes
-              $route.reload();
-          });
-        }
-
-        function update() {
-          var locals = $route.current && $route.current.locals,
-              template = locals && locals.$template;
-
-          if (angular.isDefined(template)) {
-            // gets the scope of the current app
-            var currentApp = angular.element(document.getElementById('current-app'));
-            var currentView = angular.element(document.getElementById('current-view'));
-            var currentAppScope = currentApp.scope();
-
-            var newScope = currentAppScope.$new();
-            var current = $route.current;
-
-            // Note: This will also link all children of ng-view that were contained in the original
-            // html. If that content contains controllers, ... they could pollute/change the scope.
-            // However, using ng-view on an element with additional content does not make sense...
-            // Note: We can't remove them in the cloneAttchFn of $transclude as that
-            // function is called before linking the content, which would apply child
-            // directives to non existing elements.
-
-            var clone = $transclude(newScope, function(clone) {
-              cleanupLastView();
-            });
-            
-            currentElement = currentView;
-
-            currentScope = current.scope = newScope;
-            currentScope.$emit('$viewContentLoaded');
-            currentScope.$eval(onloadExp);
-          } else {
-            cleanupLastView();
-          }
-        }
-    }
-  };
-}
-
-// This directive is called during the $transclude call of the first `overmind` directive.
-// It will replace and compile the content of the element with the loaded template.
-// We need this directive so that the element content is already filled when
-// the link function of another directive on the same element as overmind
-// is called.
-overmindFillContentFactory.$inject = ['$compile', '$controller', '$route'];
-function overmindFillContentFactory($compile, $controller, $route) {
-  return {
-    restrict: 'ECA',
-    priority: -400,
-    link: function(scope, $element) {
-      // use current app's $compile, scope
-      var currentApp = angular.element(document.getElementById('current-app'));
-      var currentView = angular.element(document.getElementById('current-view'));
-      var currentAppInjector = currentApp.injector();
-      $compile = currentAppInjector.get('$compile');
-      scope = currentApp.scope();
-
-      var current = $route.current,
-          locals = current.locals;
-
-
-      currentView.html(locals.$template);
-
-      var link = $compile(currentView.contents());
-
-      if (current.controller) {
-        locals.$scope = scope;
-        // use current app's $controller
-        $controller = currentAppInjector.get('$controller');
-        var controller = $controller(current.controller, locals);
-        if (current.controllerAs) {
-          scope[current.controllerAs] = controller;
-        }
-        currentView.data('$ngControllerController', controller);
-        currentView.children().data('$ngControllerController', controller);
       }
 
-      link(scope);
-      scope.$apply();
+      // delete scopes and reset app html
+      function cleanupApp(){
+        var previousApp = getCurrentApp();
+        var previousScope = previousApp.scope();
+        var template = '<div id="current-app"><div id="current-view"></div></div>';
+        if (previousScope){
+          previousScope.$destroy();
+        }
+        previousApp.replaceWith(template);
+      }
+
+      function cleanupView(){
+        var previousView = getCurrentView();
+        var previousScope = previousView.scope();
+        if (previousScope){
+          previousScope.$destroy();
+        }
+        previousView.replaceWith('<div id="current-view"></div>');
+      }
+
+      function setView(){
+        var currentRoute = $route.current;
+        var locals = currentRoute && currentRoute.locals
+        var template = locals && locals.$template;
+
+        if (!angular.isDefined(template)) { return; }
+
+        var currentApp = getCurrentApp();
+        var currentView = getCurrentView();
+        var currentAppScope = currentApp.scope();
+        var currentAppInjector = currentApp.injector();
+        var $compile = currentAppInjector.get('$compile');
+
+        currentView.html(template);
+
+        var link = $compile(currentView.contents());
+
+        if (currentRoute.controller) {
+          locals.$scope = currentAppScope;
+          var $controller = currentAppInjector.get('$controller');
+          var controller = $controller(currentRoute.controller, locals);
+          if (currentRoute.controllerAs) {
+            currentAppScope[current.controllerAs] = controller;
+          }
+          currentView.data('$ngControllerController', controller);
+          currentView.children().data('$ngControllerController', controller);
+        }
+
+        link(currentAppScope.$new());
+        currentAppScope.$apply();
+      }
+
+      function getCurrentApp(){
+        return angular.element(document.getElementById('current-app'));
+      }
+
+      function getCurrentView(){
+        return angular.element(document.getElementById('current-view'));
+      }
     }
-  };
-}
+  }
+});

@@ -4,5 +4,5 @@ angular.module('profile', [])
     $routeProvider.when('/profile', {controller: 'ProfileCtrl', templateUrl: '/client/apps/profile/profile.html'})
   })
   .controller('ProfileCtrl', function($scope){
-    console.log("$scope", $scope);
+    console.log("profile ctrl");
   })
