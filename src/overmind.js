@@ -101,6 +101,7 @@ angular.module('overmind').directive('overmind', function($location, $route){
     restrict: 'E',
     link: function(scope){
       var currentlyBootstrapped;
+      var currentViewScope;
 
       scope.$on('$routeChangeSuccess', function(){
         // determine the app (if any) to bootstrap or use default
@@ -142,9 +143,8 @@ angular.module('overmind').directive('overmind', function($location, $route){
 
       function cleanupView(){
         var previousView = getCurrentView();
-        var previousScope = previousView.scope();
-        if (previousScope){
-          previousScope.$destroy();
+        if (currentViewScope){
+          currentViewScope.$destroy();
         }
         previousView.replaceWith('<div id="current-view"></div>');
       }
@@ -166,18 +166,18 @@ angular.module('overmind').directive('overmind', function($location, $route){
 
         var link = $compile(currentView.contents());
 
+        currentViewScope = currentAppScope.$new();
         if (currentRoute.controller) {
-          locals.$scope = currentAppScope;
+          locals.$scope = currentViewScope;
           var $controller = currentAppInjector.get('$controller');
           var controller = $controller(currentRoute.controller, locals);
           if (currentRoute.controllerAs) {
-            currentAppScope[current.controllerAs] = controller;
+            currentViewScope[current.controllerAs] = controller;
           }
           currentView.data('$ngControllerController', controller);
           currentView.children().data('$ngControllerController', controller);
         }
-
-        link(currentAppScope.$new());
+        link(currentViewScope);
         currentAppScope.$apply();
       }
 
