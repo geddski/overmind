@@ -21,6 +21,85 @@ Shows a project broken up into several apps: `nav`, `home`, `profile`, and `admi
 The `nav` app is always on the page and is the only app bootstrapped on pageload.
 See the demo [here](http://geddski.github.io/overmind).
 
+## Getting Started
+
+### Update HTML
+
+Add the overmind app & directive anywhere in your main html page:
+
+```html
+<div id="overmind">
+  <overmind></overmind>
+</div>
+```
+
+Also replace your `ng-view` with:
+
+```html
+<div id="current-app"><div id="current-view"></div></div>
+```
+
+### Register with Overmind
+Wherever you define your Angular apps, register them with the overmind:
+```js
+angular.module('profile', [])
+  .config(angular.module('overmind').control());
+```
+
+### Configure overmind
+Let overmind know about your apps.
+`/routePrefix` : any route that **starts** with this will cause this app to be loaded & boostraped. 
+`ngModule` : the name of your Angular module.
+`file` : the location of the app's main entry JS file to load. Usually this file will `require()` the rest of the app's files when loaded.
+
+```js
+var overmind = angular.module('overmind');
+
+overmind.apps = {
+  '/profile': {
+    ngModule: 'profile',
+    file: 'apps/profile/profile'
+  },
+  '/admin': {
+    ngModule: 'admin',
+    file: 'apps/admin/admin'
+  }
+};
+
+// optional default when no matching route is found
+overmind.default = { 
+  ngModule: 'home', 
+  file: 'apps/home/home'
+}
+```
+
+The overmind config is also the place to set `html5` mode if you're using it:
+
+```js
+overmind.config(function($locationProvider){
+  $locationProvider.html5Mode(true);
+});
+```
+
+### Bootstrap overmind
+Finally, boostrap the overmind:
+```js
+angular.boostrap('#overmind', ['overmind']);
+```
+You may also bootstrap any other apps that live continuously on the page, like a `nav` app or a `chat` sidebar. But the overmind will handle the bootstrapping of your main content apps.
+
+
+## How it Works
+The overmind provides your apps with things they used to get from `ngRoute`: `$location`, `$route`, `$routeParams`, etc. The difference is these actually belong to the overmind. So even though your project will consist of many isolated apps, users can enjoy a seamless routing experience between apps via overmind.
+
+For example with the above config if the user navigates to `/profile/activity` the overmind will load and bootstrap the `profile` app, then go to the view specified in the profile app for `/profile/activity`.
+
+Say the user then navigates to `/profile/friends`. The `profile` app is already loaded and bootstrapped so 
+the view will simply change to the correct controller/template specified in the profile app for `/profile/friends`.
+
+The user then navigates to `/admin/users`. Overmind will unbootstrap/cleanup the `profile` app, load and bootstrap the `admin` app, and render the view specified in the admin app for the `/admin/users` route. 
+
+
 ## Limitations
 Overmind.js is a replacement for `ng-view`, and currently assumes a single main content area. Luckily 
 your apps can bootstrap other apps where needed. For example when the user clicks on a `chat` icon,
@@ -36,81 +115,9 @@ Also keep in mind that the components get registered for each app that uses them
 make sure they are idempotent. For example a directive that breaches its element to 
 modify the `<body>` may cause you trouble when it registers multiple times (for each app that uses it).
 
+Make sure your apps no longer depend on `ngRoute` directly. Only the overmind will depend on `ngRoute` from here on.
+
 Setting up overmind is pretty easy, the only real work is separating your apps' dependencies so they are loosly coupled from each other.
-
-## Getting Started
-
-### Update HTML
-
-Add the overmind app & directive anywhere in your main html page:
-
-```html
-<div id="overmind">
-  <overmind></overmind>
-</div>
-```
-
-Also replace your `ng-view` usage with:
-
-```html
-<div id="current-app"><div id="current-view"></div></div>
-```
-
-Overmind uses these divs to swap apps and views in and out.
-
-### Register with Overmind
-Wherever you define your Angular apps, register them with the overmind:
-```js
-angular.module('profile', [])
-  .config(angular.module('overmind').control());
-```
-
-This provides your app with things it used to get from `ngRoute`: `$location`, `$route`, `$routeParams`, etc. The difference is these actually belong to the overmind. So even though your project will consist of many isolated apps, users can enjoy a seamless routing experience between apps via overmind. Important: make sure your apps no longer depend on `ngRoute` directly. Only the overmind will depend on `ngRoute` from here on.
-
-### Configure overmind
-Before you bootstrap overmind, you need to let it know about your apps. 
-`/routePrefix` : any route that **starts** with this will cause this app to be loaded & boostraped. 
-`ngModule` : the name of your Angular module.
-`file` : the location of the app's main entry JS file to load. Usually this file will `require()` the rest of the app's files when loaded.
-
-
-```js
-var overmind = angular.module('overmind');
-
-overmind.apps = {
-  '/profile': {
-    ngModule: 'profile',
-    file: 'apps/profile/profile'
-  },
-  '/admin': {
-    ngModule: 'admin',
-    file: 'apps/admin/admin'
-  }
-};
-```
-
-So with this config if the user navigates to `/profile/activity` the overmind will load and bootstrap the `profile` app, then go to the view specified in the profile app for `/profile/activity`.
-
-Say the user then navigates to `/profile/friends`. The `profile` app is already loaded and bootstrapped so 
-the view will simply change to the correct controller/template specified in the profile app for `/profile/friends`.
-
-Say the user then navigates to `/admin/users`. The overmind will unbootstrap/cleanup the `profile` app, load and bootstrap the `admin` app, and render the view specified in the admin app for the `/admin/users` route. 
-
-
-The overmind config is also the place to set `html5` mode if you're using it:
-
-```js
-overmind.config(function($locationProvider){
-  $locationProvider.html5Mode(true);
-});
-```
-
-### Bootstrap overmind
-Finally, boostrap the overmind:
-```js
-angular.boostrap('#overmind', ['overmind']);
-```
-You can also bootstrap any other apps that live continuously on the page, like a `nav` app or a `chat` sidebar. But the overmind will handle the bootstrapping of your main content apps.
 
 ## Contributions
 I welcome tests (with protractor probably?), bug fixes, better documentation, perf, upgrading Angular versions, etc.
