@@ -1,0 +1,23 @@
+{
+  "name": "overmind",
+  "version": "0.0.1",
+  "description": "Easy module isolation and lazy loading for Angular apps",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geddski/overmind.git"
+  },
+  "keywords": [
+    "angularjs",
+    "overmind"
+  ],
+  "author": "Dave Geddes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/geddski/overmind/issues"
+  },
+  "homepage": "https://github.com/geddski/overmind",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-gh-pages": "^0.9.1"
+  }
+}

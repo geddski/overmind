@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Overmind Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <script src="vendor/require.js"></script>
+  <script src="vendor/angular.js"></script>
+  <script src="vendor/angular-route.js"></script>
+  <script src="src/overmind.js"></script>
+
+  <div id="nav">
+    <a href="#/">Home</a>
+    <a href="#/profile">Profile</a>
+    <a href="#/admin">Admin</a>
+  </div>
+
+  <!-- the overmind controls the navigation/loading/bootstrapping of apps -->
+  <div id="overmind">
+    <overmind></overmind>
+  </div>
+
+  <!-- element that gets bootstrapped when the current app changes -->
+  <div id="current-app">
+    <div id="current-view"></div>
+  </div>
+
+  <script>
+    require.config({baseUrl: '' });
+    require(['apps/nav/nav'], function(){
+      // configure overmind
+      var overmind = angular.module('overmind');
+
+      overmind.config(function($locationProvider){
+        // $locationProvider.html5Mode(true); off for gh-pages
+        // but this is where you would do stuff like this.
+      });
+
+      overmind.apps = {
+        '/profile': {
+          ngModule: 'profile',
+          file: 'apps/profile/profile'
+        },
+        '/admin': {
+          ngModule: 'admin',
+          file: 'apps/admin/admin'
+        }
+      };
+
+      overmind.default = { ngModule: 'home', file: 'apps/home/home'}
+
+      // bootstrap overmind and any initial app(s)
+      angular.bootstrap(document.getElementById('overmind'), ['overmind']);
+      angular.bootstrap(document.getElementById('nav'), ['nav']);
+    });
+  </script>
+</body>
+</html>
