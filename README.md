@@ -1,5 +1,6 @@
 # overmind.js
 Easy module isolation and lazy loading for Angular apps.
+
 ![overmind](http://i.gyazo.com/b6fd9898f64efc2024eb4d73777e6b56.png)
 
 Overmind replaces ng-view. When the user navigates to a route, the overmind checks to see which app that route belongs to, loads the app's scripts and templates (if not already loaded) and bootstraps the app on the fly.
@@ -17,15 +18,8 @@ You can have several apps on the page at a time. See the Demo.
 
 ## Demo
 Shows a project broken up into several apps: `nav`, `home`, `profile`, and `admin`.
-The `nav` app is always on the page and is the only app bootstrapped on pageload. 
-
-To run the demo:
-`cd overmind`  
-`node demo/server/app`  
-open browser at [localhost:9191](http://localhost:9191)
-Notice how the `home`, `profile` and `admin` apps are loaded and bootstrapped on demand as
-you click the links in the nav.
-See `/demo/client/index.html`
+The `nav` app is always on the page and is the only app bootstrapped on pageload.
+See the demo [here](http://geddski.github.io/overmind).
 
 ## Limitations
 Overmind.js is a replacement for `ng-view`, and currently assumes a single main content area. Luckily 
