@@ -1,6 +1,6 @@
 {
   "name": "overmind",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Easy module isolation and lazy loading for Angular apps",
   "repository": {
     "type": "git",
