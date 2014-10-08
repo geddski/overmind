@@ -164,7 +164,7 @@ angular.module('overmind').directive('overmind', function($location, $route){
 
         currentView.html(template);
 
-        var link = $compile(currentView.contents());
+        var link = $compile(currentView.parent().contents());
 
         currentViewScope = currentAppScope.$new();
         if (currentRoute.controller) {
