@@ -57,17 +57,27 @@ overmind.config(function($routeProvider, $locationProvider){
     }
 
     var absHref = elm.prop('href');
-
-    var rewrittenUrl = $location.$$rewrite(absHref);
-
-    if (absHref && !elm.attr('target') && rewrittenUrl && !event.isDefaultPrevented()) {
-      event.preventDefault();
-      if (rewrittenUrl != $browser.url()) {
+    
+    // get the actual href attribute - see
+    // http://msdn.microsoft.com/en-us/library/ie/dd347148(v=vs.85).aspx
+    var relHref = elm.attr('href') || elm.attr('xlink:href');
+    
+    // Ignore when url is started with javascript: or mailto:
+    var IGNORE_URI_REGEXP = /^\s*(javascript|mailto):/i;
+    if (IGNORE_URI_REGEXP.test(absHref)) return;
+    
+    if (absHref && !elm.attr('target') && !event.isDefaultPrevented()) {
+      if ($location.$$parseLinkUrl(absHref, relHref)) {
+        // We do a preventDefault for all urls that are part of the angular application,
+        // in html5mode and also without, so that we are able to abort navigation without
+        // getting double entries in the location history.
+        event.preventDefault();
         // update location manually
-        $location.$$parse(rewrittenUrl);
-        $rootScope.$apply();
-        // hack to work around FF6 bug 684208 when scenario runner clicks on links
-        window.angular['ff-684208-preventDefault'] = true;
+        if ($location.absUrl() != $browser.url()) {
+          $rootScope.$apply();
+          // hack to work around FF6 bug 684208 when scenario runner clicks on links
+          window.angular['ff-684208-preventDefault'] = true;
+        }
       }
     }
   });
