@@ -164,8 +164,6 @@ angular.module('overmind').directive('overmind', function($location, $route){
         var locals = currentRoute && currentRoute.locals
         var template = locals && locals.$template;
 
-        if (!angular.isDefined(template)) { return; }
-
         var currentApp = getCurrentApp();
         var currentView = getCurrentView();
         var currentAppScope = currentApp.scope();
