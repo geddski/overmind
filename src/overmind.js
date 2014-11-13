@@ -1,7 +1,7 @@
 /**
  * Overmind
  * Copyright 2014 Dave Geddes @geddski
- * Version 2.0.0
+ * Version 2.0.1
  */
 
 var overmind = angular.module('overmind', ['ngRoute']);
