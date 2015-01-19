@@ -1,19 +1,20 @@
 /**
  * Overmind
  * Copyright 2014 Dave Geddes @geddski
- * Version 2.0.0
+ * Version 2.0.1
  */
 
 var overmind = angular.module('overmind', ['ngRoute']);
 overmind.shared = {};
 
-overmind.config(function($routeProvider, $locationProvider){
+overmind.config(["$routeProvider", "$locationProvider", function($routeProvider, $locationProvider){
   $routeProvider.otherwise({});
 
   // share the routeProvider with all the other apps
   overmind.shared.$routeProvider = $routeProvider;
-})
-.run(function($rootScope, $location, $route, $templateCache, $routeParams, $browser, $rootElement, $q){
+}])
+.run(["$rootScope", "$location", "$route", "$templateCache", "$routeParams", "$browser", "$rootElement", "$q", 
+  function($rootScope, $location, $route, $templateCache, $routeParams, $browser, $rootElement, $q){
   decorate($location, 'url');
   decorate($location, 'replace');
   decorate($location, 'path');
@@ -81,7 +82,7 @@ overmind.config(function($routeProvider, $locationProvider){
       }
     }
   });
-});
+}]);
 
 // allow shared resources.
 // these will be provided to apps controlled by the overmind
@@ -95,18 +96,18 @@ angular.module('overmind').share = function(shared){
 // Configures other applications to use routeProvider etc from overmind 
 angular.module('overmind').control = function(){
 
-  return /*@ngInject*/ function($provide){
+  return ["$provide", function($provide){
     var shared = overmind.shared;
     if (!shared) return;
     angular.forEach(overmind.shared, function(val, key){
       $provide.constant(key, val);
     });
-  }
+  }];
 };
 
 
 // overmind directive, replaces ng-view
-angular.module('overmind').directive('overmind', function($location, $route){
+angular.module('overmind').directive('overmind', ["$location", "$route", function($location, $route){
   return {
     restrict: 'E',
     link: function(scope){
@@ -164,8 +165,6 @@ angular.module('overmind').directive('overmind', function($location, $route){
         var locals = currentRoute && currentRoute.locals
         var template = locals && locals.$template;
 
-        if (!angular.isDefined(template)) { return; }
-
         var currentApp = getCurrentApp();
         var currentView = getCurrentView();
         var currentAppScope = currentApp.scope();
@@ -200,4 +199,4 @@ angular.module('overmind').directive('overmind', function($location, $route){
       }
     }
   }
-});
+}]);
