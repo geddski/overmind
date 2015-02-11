@@ -176,6 +176,7 @@ angular.module('overmind').directive('overmind', ["$location", "$route", functio
         var link = $compile(currentView.parent().contents());
 
         currentViewScope = currentAppScope.$new();
+        overmind.shared.currentViewScope = currentViewScope;
         if (currentRoute.controller) {
           locals.$scope = currentViewScope;
           var $controller = currentAppInjector.get('$controller');
