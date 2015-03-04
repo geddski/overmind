@@ -181,7 +181,7 @@ angular.module('overmind').directive('overmind', ["$location", "$route", functio
           var $controller = currentAppInjector.get('$controller');
           var controller = $controller(currentRoute.controller, locals);
           if (currentRoute.controllerAs) {
-            currentViewScope[current.controllerAs] = controller;
+            currentViewScope[currentRoute.controllerAs] = controller;
           }
           currentView.data('$ngControllerController', controller);
           currentView.children().data('$ngControllerController', controller);
