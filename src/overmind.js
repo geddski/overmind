@@ -118,7 +118,7 @@ angular.module('overmind').directive('overmind', ["$location", "$route", functio
         // determine the app (if any) to bootstrap or use default
         var overmind = angular.module('overmind');
         var match = $location.path().match(/\/\w+/) || [];
-        var app = overmind.apps[match[0]] || overmind.default;
+        var app = overmind.apps[match[0]] || overmind["default"];
 
         // if the app is registered and is different from the current app, bootstrap it
         if (app && app !== currentlyBootstrapped){
