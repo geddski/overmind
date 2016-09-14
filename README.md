@@ -1,4 +1,4 @@
-# overmind.js
+# overmind.js (DEPRECATED)
 Easy module isolation and lazy loading for Angular apps.
 
 ![overmind](http://i.gyazo.com/b6fd9898f64efc2024eb4d73777e6b56.png)
