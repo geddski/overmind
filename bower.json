@@ -1,0 +1,25 @@
+{
+  "name": "overmind",
+  "version": "0.0.1",
+  "homepage": "https://github.com/geddski/overmind",
+  "authors": [
+    "Dave Geddes"
+  ],
+  "description": "Easy module isolation and lazy loading for Angular apps",
+  "main": "src/overmind.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "angularjs",
+    "overmind"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
